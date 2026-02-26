@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PwaInstallButton } from "@/components/pwa-install-prompt";
 import Link from "next/link";
 
 const roleLabels: Record<string, string> = {
@@ -304,6 +305,11 @@ export default function MyPage() {
           </div>
         </div>
       ))}
+
+      {/* 앱 설치 */}
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+        <PwaInstallButton />
+      </div>
 
       {/* Logout */}
       <button
