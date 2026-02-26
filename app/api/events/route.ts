@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getAuthFromCookie } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
@@ -19,8 +19,8 @@ const eventSchema = z.object({
 // GET /api/events - 일정 목록 조회
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const auth = await getAuthFromCookie();
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "인증이 필요합니다." },
         { status: 401 }
@@ -35,6 +35,13 @@ export async function GET(request: NextRequest) {
     const supabase = createServerClient();
     const offset = (page - 1) * limit;
 
+    // Fetch user's clubId from DB
+    const { data: user } = await supabase
+      .from("users")
+      .select("club_id")
+      .eq("id", auth.userId)
+      .single();
+
     let query = supabase
       .from("events")
       .select(
@@ -44,7 +51,7 @@ export async function GET(request: NextRequest) {
         rsvps:event_rsvps(id, user_id, status, user:users(id, name, nickname, profile_image))
       `
       )
-      .eq("club_id", session.user.clubId)
+      .eq("club_id", user?.club_id)
       .order("event_date", { ascending: upcoming })
       .order("start_time", { ascending: true })
       .range(offset, offset + limit - 1);
@@ -85,8 +92,8 @@ export async function GET(request: NextRequest) {
 // POST /api/events - 일정 생성
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const auth = await getAuthFromCookie();
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "인증이 필요합니다." },
         { status: 401 }
@@ -105,12 +112,19 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerClient();
 
+    // Fetch user's clubId from DB
+    const { data: user } = await supabase
+      .from("users")
+      .select("club_id")
+      .eq("id", auth.userId)
+      .single();
+
     const { data: event, error } = await supabase
       .from("events")
       .insert({
         ...parsed.data,
-        club_id: session.user.clubId,
-        created_by: session.user.id,
+        club_id: user?.club_id,
+        created_by: auth.userId,
       })
       .select()
       .single();

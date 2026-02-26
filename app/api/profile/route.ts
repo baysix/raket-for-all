@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getAuthFromCookie } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
@@ -16,8 +16,8 @@ const profileSchema = z.object({
 // GET /api/profile - 내 프로필 + 통계 조회
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const auth = await getAuthFromCookie();
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "인증이 필요합니다." },
         { status: 401 }
@@ -30,7 +30,7 @@ export async function GET() {
     const { data: user, error } = await supabase
       .from("users")
       .select("*")
-      .eq("id", session.user.id)
+      .eq("id", auth.userId)
       .single();
 
     if (error || !user) {
@@ -47,20 +47,20 @@ export async function GET() {
     const { count: attendanceCount } = await supabase
       .from("event_rsvps")
       .select("id", { count: "exact", head: true })
-      .eq("user_id", session.user.id)
+      .eq("user_id", auth.userId)
       .eq("status", "attending");
 
     // 게시글 수
     const { count: postCount } = await supabase
       .from("posts")
       .select("id", { count: "exact", head: true })
-      .eq("author_id", session.user.id);
+      .eq("author_id", auth.userId);
 
     // 댓글 수
     const { count: commentCount } = await supabase
       .from("comments")
       .select("id", { count: "exact", head: true })
-      .eq("author_id", session.user.id);
+      .eq("author_id", auth.userId);
 
     return NextResponse.json({
       success: true,
@@ -84,8 +84,8 @@ export async function GET() {
 // PUT /api/profile - 프로필 수정
 export async function PUT(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const auth = await getAuthFromCookie();
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "인증이 필요합니다." },
         { status: 401 }
@@ -107,7 +107,7 @@ export async function PUT(request: NextRequest) {
     const { data: user, error } = await supabase
       .from("users")
       .update(parsed.data)
-      .eq("id", session.user.id)
+      .eq("id", auth.userId)
       .select("*")
       .single();
 

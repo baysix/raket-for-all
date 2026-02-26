@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/auth/auth-context";
 import Link from "next/link";
 import {
   format,
@@ -88,7 +88,7 @@ function FilterChip({
 }
 
 export default function EventsPage() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -392,7 +392,7 @@ export default function EventsPage() {
               {filteredEvents.map((event) => {
                 const isAttending = event.rsvps?.some(
                   (r) =>
-                    r.user_id === session?.user?.id &&
+                    r.user_id === user?.id &&
                     r.status === "attending"
                 );
                 const dateLabel = getDateLabel(event.event_date);

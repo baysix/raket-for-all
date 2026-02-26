@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/auth/auth-context";
 import { Check, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -20,16 +20,16 @@ export function RsvpButton({
   maxParticipants,
   onRsvpChange,
 }: RsvpButtonProps) {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const myRsvp = rsvps.find((r) => r.user_id === session?.user?.id);
+  const myRsvp = rsvps.find((r) => r.user_id === user?.id);
   const attendingCount = rsvps.filter((r) => r.status === "attending").length;
   const isFull =
     maxParticipants !== null && attendingCount >= maxParticipants;
 
   const handleRsvp = async (status: "attending" | "waiting") => {
-    if (!session?.user) return;
+    if (!user) return;
     setLoading(status);
 
     try {

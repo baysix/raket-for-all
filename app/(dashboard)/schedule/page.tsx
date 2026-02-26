@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState, useMemo } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/auth/auth-context";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -62,7 +62,7 @@ export default function SchedulePage() {
 }
 
 function ScheduleContent() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,13 +91,13 @@ function ScheduleContent() {
 
   // 내가 참석 중인 일정만
   const myEvents = useMemo(() => {
-    if (!session?.user?.id) return [];
+    if (!user?.id) return [];
     return events.filter((e) =>
       e.rsvps?.some(
-        (r) => r.user_id === session.user.id && r.status === "attending"
+        (r) => r.user_id === user?.id && r.status === "attending"
       )
     );
-  }, [events, session?.user?.id]);
+  }, [events, user?.id]);
 
   // 캘린더: 선택 날짜의 내 일정
   const selectedDateEvents = useMemo(() => {

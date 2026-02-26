@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/auth/auth-context";
 import { format, parseISO } from "date-fns";
 import { ko } from "date-fns/locale";
 import {
@@ -58,7 +58,7 @@ interface ProfileForm {
 
 export default function ProfileEditPage() {
   const router = useRouter();
-  const { update: updateSession } = useSession();
+  const { refresh } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -182,11 +182,8 @@ export default function ProfileEditPage() {
         return;
       }
 
-      // NextAuth 세션 업데이트
-      await updateSession({
-        nickname: form.nickname,
-        image: form.profile_image,
-      });
+      // 세션 새로고침
+      await refresh();
 
       toast.success("프로필이 수정되었습니다!");
       router.push("/mypage");

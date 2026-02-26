@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/auth/auth-context";
 import { useRouter } from "next/navigation";
 import {
   Users,
@@ -24,7 +24,7 @@ import {
 import { toast } from "sonner";
 
 export default function AdminPage() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const router = useRouter();
   const [codes, setCodes] = useState<
     Array<{
@@ -40,8 +40,8 @@ export default function AdminPage() {
   const [newCode, setNewCode] = useState({ role: "member", maxUses: "50" });
 
   const isAdmin =
-    session?.user?.role === "platform_admin" ||
-    session?.user?.role === "club_admin";
+    user?.role === "platform_admin" ||
+    user?.role === "club_admin";
 
   useEffect(() => {
     if (!isAdmin) {

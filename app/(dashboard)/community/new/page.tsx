@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/auth/auth-context";
 import {
   ArrowLeft,
   Loader2,
@@ -28,7 +28,7 @@ const MAX_IMAGES = 3;
 
 export default function NewPostPage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<
     { url: string; preview: string; uploading: boolean }[]
@@ -41,8 +41,8 @@ export default function NewPostPage() {
   });
 
   const isAdmin =
-    session?.user?.role === "platform_admin" ||
-    session?.user?.role === "club_admin";
+    user?.role === "platform_admin" ||
+    user?.role === "club_admin";
 
   const uploadingCount = images.filter((img) => img.uploading).length;
 

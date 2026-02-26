@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getAuthFromCookie } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 
 // POST /api/posts/[id]/likes - 좋아요 토글
@@ -8,8 +8,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const auth = await getAuthFromCookie();
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "인증이 필요합니다." },
         { status: 401 }
@@ -24,7 +24,7 @@ export async function POST(
       .from("likes")
       .select("id")
       .eq("post_id", postId)
-      .eq("user_id", session.user.id)
+      .eq("user_id", auth.userId)
       .single();
 
     if (existingLike) {
@@ -36,7 +36,7 @@ export async function POST(
     // Like
     await supabase.from("likes").insert({
       post_id: postId,
-      user_id: session.user.id,
+      user_id: auth.userId,
     });
 
     return NextResponse.json({ success: true, data: { liked: true } });

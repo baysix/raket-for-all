@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/auth/auth-context";
 import { toast } from "sonner";
 import type { Event } from "@/types";
 
@@ -49,7 +49,7 @@ function getTimeRemaining(dateStr: string, timeStr: string) {
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
@@ -92,7 +92,7 @@ export default function EventDetailPage() {
   };
 
   const handleRsvp = async (status: "attending" | "waiting") => {
-    if (!session?.user) return;
+    if (!user) return;
     setRsvpLoading(status);
 
     try {
@@ -152,13 +152,13 @@ export default function EventDetailPage() {
   }
 
   const timeRemaining = getTimeRemaining(event.event_date, event.start_time);
-  const isOwner = session?.user?.id === event.created_by;
+  const isOwner = user?.id === event.created_by;
   const isAdmin =
-    session?.user?.role === "platform_admin" ||
-    session?.user?.role === "club_admin";
+    user?.role === "platform_admin" ||
+    user?.role === "club_admin";
   const canManage = isOwner || isAdmin;
 
-  const myRsvp = event.rsvps?.find((r) => r.user_id === session?.user?.id);
+  const myRsvp = event.rsvps?.find((r) => r.user_id === user?.id);
   const attendingCount =
     event.rsvps?.filter((r) => r.status === "attending").length || 0;
   const isFull =

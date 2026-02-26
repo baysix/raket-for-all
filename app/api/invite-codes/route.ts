@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getAuthFromCookie } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 
 function generateRandomCode(length = 8): string {
@@ -14,17 +14,26 @@ function generateRandomCode(length = 8): string {
 // GET /api/invite-codes - 초대코드 목록
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const auth = await getAuthFromCookie();
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "인증이 필요합니다." },
         { status: 401 }
       );
     }
 
+    const supabase = createServerClient();
+
+    // Fetch user role and clubId from DB
+    const { data: user } = await supabase
+      .from("users")
+      .select("role, club_id")
+      .eq("id", auth.userId)
+      .single();
+
     const isAdmin =
-      session.user.role === "platform_admin" ||
-      session.user.role === "club_admin";
+      user?.role === "platform_admin" ||
+      user?.role === "club_admin";
 
     if (!isAdmin) {
       return NextResponse.json(
@@ -33,12 +42,10 @@ export async function GET() {
       );
     }
 
-    const supabase = createServerClient();
-
     const { data: codes, error } = await supabase
       .from("invite_codes")
       .select("*")
-      .eq("club_id", session.user.clubId)
+      .eq("club_id", user.club_id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -60,17 +67,26 @@ export async function GET() {
 // POST /api/invite-codes - 초대코드 생성
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const auth = await getAuthFromCookie();
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "인증이 필요합니다." },
         { status: 401 }
       );
     }
 
+    const supabase = createServerClient();
+
+    // Fetch user role and clubId from DB
+    const { data: user } = await supabase
+      .from("users")
+      .select("role, club_id")
+      .eq("id", auth.userId)
+      .single();
+
     const isAdmin =
-      session.user.role === "platform_admin" ||
-      session.user.role === "club_admin";
+      user?.role === "platform_admin" ||
+      user?.role === "club_admin";
 
     if (!isAdmin) {
       return NextResponse.json(
@@ -81,16 +97,15 @@ export async function POST(request: NextRequest) {
 
     const { role = "member", maxUses = 50 } = await request.json();
     const code = generateRandomCode();
-    const supabase = createServerClient();
 
     const { data, error } = await supabase
       .from("invite_codes")
       .insert({
         code,
-        club_id: session.user.clubId,
+        club_id: user.club_id,
         role,
         max_uses: maxUses,
-        created_by: session.user.id,
+        created_by: auth.userId,
       })
       .select()
       .single();

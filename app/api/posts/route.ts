@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getAuthFromCookie } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
@@ -13,8 +13,8 @@ const postSchema = z.object({
 // GET /api/posts
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const auth = await getAuthFromCookie();
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "인증이 필요합니다." },
         { status: 401 }
@@ -29,6 +29,13 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServerClient();
 
+    // Fetch user's clubId from DB
+    const { data: user } = await supabase
+      .from("users")
+      .select("club_id")
+      .eq("id", auth.userId)
+      .single();
+
     let query = supabase
       .from("posts")
       .select(
@@ -39,7 +46,7 @@ export async function GET(request: NextRequest) {
         likes:likes(count)
       `
       )
-      .eq("club_id", session.user.clubId)
+      .eq("club_id", user?.club_id)
       .order("is_pinned", { ascending: false })
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
@@ -62,7 +69,7 @@ export async function GET(request: NextRequest) {
     const { data: userLikes } = await supabase
       .from("likes")
       .select("post_id")
-      .eq("user_id", session.user.id)
+      .eq("user_id", auth.userId)
       .in("post_id", postIds);
 
     const likedPostIds = new Set(userLikes?.map((l) => l.post_id) || []);
@@ -88,8 +95,8 @@ export async function GET(request: NextRequest) {
 // POST /api/posts
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const auth = await getAuthFromCookie();
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "인증이 필요합니다." },
         { status: 401 }
@@ -106,11 +113,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const supabase = createServerClient();
+
+    // Fetch user role and clubId from DB
+    const { data: user } = await supabase
+      .from("users")
+      .select("role, club_id")
+      .eq("id", auth.userId)
+      .single();
+
     // Only admins can post announcements
     if (
       parsed.data.type === "announcement" &&
-      session.user.role !== "platform_admin" &&
-      session.user.role !== "club_admin"
+      user?.role !== "platform_admin" &&
+      user?.role !== "club_admin"
     ) {
       return NextResponse.json(
         { success: false, error: "공지사항은 운영자만 작성할 수 있습니다." },
@@ -118,14 +134,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createServerClient();
-
     const { data: post, error } = await supabase
       .from("posts")
       .insert({
         ...parsed.data,
-        club_id: session.user.clubId,
-        author_id: session.user.id,
+        club_id: user?.club_id,
+        author_id: auth.userId,
       })
       .select()
       .single();

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useAuth } from "@/components/auth/auth-context";
 import {
   LogOut,
   CalendarDays,
@@ -87,7 +87,7 @@ interface ProfileData {
 }
 
 export default function MyPage() {
-  const { data: session } = useSession();
+  const { user, logout } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -110,12 +110,12 @@ export default function MyPage() {
   };
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: "/login" });
+    await logout();
   };
 
   const isAdmin =
-    session?.user?.role === "platform_admin" ||
-    session?.user?.role === "club_admin";
+    user?.role === "platform_admin" ||
+    user?.role === "club_admin";
 
   const experience = calcExperience(profile?.tennis_start_date ?? null);
   const subtitle = [experience, profile?.gender ? genderLabels[profile.gender] : null]

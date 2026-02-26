@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/auth/auth-context";
 import Link from "next/link";
 import { format, parseISO, isToday, isTomorrow } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -54,7 +54,7 @@ function getCareerText(startDate: string | null | undefined) {
 }
 
 export default function HomePage() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [myAttendanceCount, setMyAttendanceCount] = useState<number>(0);
   const [tennisStartDate, setTennisStartDate] = useState<string | null>(null);
@@ -76,9 +76,9 @@ export default function HomePage() {
         ]);
 
         if (eventsData.success) setEvents(eventsData.data);
-        if (rankingsData.success && session?.user?.id) {
+        if (rankingsData.success && user?.id) {
           const myRanking = rankingsData.data.find(
-            (r: RankingEntry) => r.user_id === session.user.id
+            (r: RankingEntry) => r.user_id === user?.id
           );
           if (myRanking) {
             setMyAttendanceCount(myRanking.attendance_count);
@@ -95,13 +95,13 @@ export default function HomePage() {
     };
 
     fetchData();
-  }, [session?.user?.id]);
+  }, [user?.id]);
 
 
   // 다가오는 일정: 내가 참석 누른 일정만
   const myUpcomingEvents = events.filter((e) =>
     e.rsvps?.some(
-      (r) => r.user_id === session?.user?.id && r.status === "attending"
+      (r) => r.user_id === user?.id && r.status === "attending"
     )
   );
 
@@ -125,17 +125,17 @@ export default function HomePage() {
       <div className="bg-white border border-gray-100 rounded-xl p-4">
         <div className="flex items-center gap-3 mb-4">
           <Avatar className="w-12 h-12">
-            <AvatarImage src={session?.user?.image || undefined} />
+            <AvatarImage src={user?.image || undefined} />
             <AvatarFallback className="text-base bg-[#E8F5E9] text-[#4CAF50] font-bold">
-              {(session?.user?.nickname || session?.user?.name || "U").charAt(0)}
+              {(user?.nickname || user?.name || "U").charAt(0)}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="font-bold text-base truncate">
-              {session?.user?.nickname || session?.user?.name || "회원"}
+              {user?.nickname || user?.name || "회원"}
             </p>
             <p className="text-xs text-gray-400">
-              {session?.user?.email}
+              {user?.email}
             </p>
           </div>
           <Link

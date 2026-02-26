@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getAuthFromCookie } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 
 // POST /api/events/[id]/rsvp - 참석/대기 토글
@@ -8,8 +8,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const auth = await getAuthFromCookie();
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "인증이 필요합니다." },
         { status: 401 }
@@ -47,7 +47,7 @@ export async function POST(
       .from("event_rsvps")
       .select("id, status")
       .eq("event_id", eventId)
-      .eq("user_id", session.user.id)
+      .eq("user_id", auth.userId)
       .single();
 
     // If same status, remove the rsvp (toggle off)
@@ -82,7 +82,7 @@ export async function POST(
       .upsert(
         {
           event_id: eventId,
-          user_id: session.user.id,
+          user_id: auth.userId,
           status,
         },
         { onConflict: "event_id,user_id" }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/auth/auth-context";
 import { format, parseISO } from "date-fns";
 import { ko } from "date-fns/locale";
 import {
@@ -33,7 +33,7 @@ const typeConfig = {
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const [post, setPost] = useState<
     (Post & { comments: Comment[] }) | null
   >(null);
@@ -161,10 +161,10 @@ export default function PostDetailPage() {
   }
 
   const config = typeConfig[post.type as keyof typeof typeConfig];
-  const isOwner = session?.user?.id === post.author_id;
+  const isOwner = user?.id === post.author_id;
   const isAdmin =
-    session?.user?.role === "platform_admin" ||
-    session?.user?.role === "club_admin";
+    user?.role === "platform_admin" ||
+    user?.role === "club_admin";
   const canManage = isOwner || isAdmin;
 
   return (

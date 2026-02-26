@@ -1,12 +1,12 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/auth/auth-context";
 import { Bell } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 
 export function Header() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
@@ -28,12 +28,12 @@ export function Header() {
             <Bell className="w-5 h-5 text-gray-600" />
           </Link>
 
-          {session?.user && (
+          {user && (
             <Link href="/mypage">
               <Avatar className="w-8 h-8">
-                <AvatarImage src={session.user.image || undefined} />
+                <AvatarImage src={user.image || undefined} />
                 <AvatarFallback className="text-xs bg-[#E8F5E9] text-[#4CAF50] font-medium">
-                  {(session.user.nickname || session.user.name || "U").charAt(0)}
+                  {(user.nickname || user.name || "U").charAt(0)}
                 </AvatarFallback>
               </Avatar>
             </Link>

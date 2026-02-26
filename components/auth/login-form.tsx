@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/components/auth/auth-context";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,23 +20,27 @@ export function LoginForm() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const { refresh } = useAuth();
+
   const handleCredentialLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const result = await signIn("credentials", {
-        email: form.email,
-        password: form.password,
-        redirect: false,
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, password: form.password }),
       });
+      const result = await res.json();
 
-      if (result?.error) {
-        setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+      if (!result.success) {
+        setError(result.error || "이메일 또는 비밀번호가 올바르지 않습니다.");
         return;
       }
 
+      await refresh();
       router.push("/");
       router.refresh();
     } catch {

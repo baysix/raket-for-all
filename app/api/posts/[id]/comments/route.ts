@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getAuthFromCookie } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
@@ -9,8 +9,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const auth = await getAuthFromCookie();
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "인증이 필요합니다." },
         { status: 401 }
@@ -37,7 +37,7 @@ export async function POST(
       .from("comments")
       .insert({
         post_id: postId,
-        author_id: session.user.id,
+        author_id: auth.userId,
         content: parsed.data.content,
       })
       .select("*, author:users(id, name, nickname, profile_image)")
