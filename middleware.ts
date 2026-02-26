@@ -1,7 +1,35 @@
-import NextAuth from "next-auth";
-import { authConfig } from "@/lib/auth.config";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default NextAuth(authConfig).auth;
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  const isAuthPage =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
+    pathname.startsWith("/invite");
+
+  const isPublicApi =
+    pathname.startsWith("/api/register") ||
+    pathname.startsWith("/api/invite-codes/verify") ||
+    pathname.startsWith("/api/auth");
+
+  if (isAuthPage || isPublicApi) {
+    return NextResponse.next();
+  }
+
+  // NextAuth v5 세션 쿠키 확인
+  const sessionToken =
+    request.cookies.get("authjs.session-token")?.value ||
+    request.cookies.get("__Secure-authjs.session-token")?.value;
+
+  if (!sessionToken) {
+    const loginUrl = new URL("/login", request.url);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
