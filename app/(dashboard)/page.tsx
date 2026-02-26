@@ -292,43 +292,30 @@ export default function HomePage() {
           <div className="flex flex-col gap-2">
             {allEvents.map((event) => (
               <Link key={event.id} href={`/events/${event.id}`} className="block">
-                <div className="bg-white border border-gray-100 rounded-xl overflow-hidden flex items-stretch active:bg-gray-50 transition-colors">
-                  {/* Thumbnail */}
-                  {event.image_url && (
-                    <div className="w-20 shrink-0">
-                      <img
-                        src={event.image_url}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-
-                  <div className="flex-1 min-w-0 px-4 py-3 flex items-center gap-3">
-                    {/* Date */}
-                    <div className="w-12 text-center shrink-0">
-                      <p className={`text-[11px] font-semibold ${isToday(parseISO(event.event_date)) ? "text-[#4CAF50]" : "text-gray-500"}`}>
+                <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 active:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    {/* Date badge */}
+                    <div className={`w-11 shrink-0 rounded-lg py-1.5 text-center ${getDateBadgeStyle(event.event_date)}`}>
+                      <p className="text-[10px] font-semibold leading-none">
                         {getDateLabel(event.event_date)}
                       </p>
-                      <p className="text-sm font-bold text-gray-800">
+                      <p className="text-xs font-bold mt-1 leading-none">
                         {event.start_time.slice(0, 5)}
                       </p>
                     </div>
 
-                    {/* Divider */}
-                    <div className="w-px h-9 bg-gray-200 shrink-0" />
-
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold truncate">{event.title}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className="flex items-center gap-1 mt-0.5">
                         {event.location && (
-                          <span className="text-[11px] text-gray-400 truncate">
-                            {event.location}
+                          <span className="text-[11px] text-gray-400 flex items-center gap-0.5 truncate">
+                            <MapPin className="w-2.5 h-2.5 shrink-0" />
+                            <span className="truncate">{event.location}</span>
                           </span>
                         )}
                         {event.game_type && (
-                          <span className="text-[11px] text-gray-400">
+                          <span className="text-[11px] text-gray-400 shrink-0">
                             · {gameTypeLabels[event.game_type] || event.game_type}
                           </span>
                         )}
@@ -336,11 +323,13 @@ export default function HomePage() {
                     </div>
 
                     {/* Count */}
-                    <span className="text-xs text-gray-500 shrink-0">
-                      <span className="text-[#4CAF50] font-bold">{event.attending_count || 0}</span>
-                      /{event.max_participants || "∞"}명
-                    </span>
-                    <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className="text-xs text-gray-500">
+                        <span className="text-[#4CAF50] font-bold">{event.attending_count || 0}</span>
+                        /{event.max_participants || "∞"}명
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-gray-300" />
+                    </div>
                   </div>
                 </div>
               </Link>

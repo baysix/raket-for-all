@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { Suspense, useEffect, useState, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -48,6 +48,20 @@ function getDateLabel(dateStr: string) {
 }
 
 export default function SchedulePage() {
+  return (
+    <Suspense fallback={
+      <div className="p-4 space-y-4">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-72 rounded-xl" />
+        <Skeleton className="h-24 rounded-xl" />
+      </div>
+    }>
+      <ScheduleContent />
+    </Suspense>
+  );
+}
+
+function ScheduleContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const [events, setEvents] = useState<Event[]>([]);
