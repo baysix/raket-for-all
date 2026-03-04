@@ -10,7 +10,7 @@ export default function DashboardLayout({
     <div className="h-screen flex flex-col bg-white">
       <Header />
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-lg mx-auto pb-20">{children}</div>
+        <div className="max-w-lg mx-auto">{children}</div>
       </main>
       <BottomNav />
     </div>

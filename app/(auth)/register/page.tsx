@@ -22,7 +22,7 @@ function RegisterContent() {
   } | null>(null);
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center p-4 bg-gradient-to-b from-[#E8F5E9] to-white">
+    <div className="min-h-dvh flex flex-col items-center py-8 px-4 bg-gradient-to-b from-[#E8F5E9] to-white">
       {!verifiedData ? (
         <InviteCodeForm onVerified={setVerifiedData} />
       ) : (

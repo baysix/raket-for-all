@@ -133,11 +133,6 @@
 /* Mobile viewport fix */
 html, body {
   height: 100%;
-  overflow: hidden;
-}
-
-#__next, main {
-  height: 100%;
 }
 
 /* Smooth scrolling */
