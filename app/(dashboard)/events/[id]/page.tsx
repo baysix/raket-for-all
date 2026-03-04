@@ -169,7 +169,7 @@ export default function EventDetailPage() {
     event.rsvps?.filter((r) => r.status === "waiting") || [];
 
   return (
-    <div className="pb-28">
+    <div>
       {/* Header */}
       <div className="sticky top-0 z-20 bg-white border-b border-gray-100">
         <div className="flex items-center justify-between px-2 py-2">
@@ -369,73 +369,96 @@ export default function EventDetailPage() {
 
       {/* 참가 현황 */}
       <div className="mx-4 mb-4">
-        <h3 className="font-bold text-sm mb-2">참가 현황</h3>
-        <div className="bg-white border border-gray-100 rounded-xl p-4">
-          {/* Attending */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <h4 className="font-medium text-sm">참석</h4>
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[#E8F5E9] text-[#4CAF50]">
-                {attending.length}명
-              </span>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-bold text-sm">참가 현황</h3>
+          <span className="text-xs text-gray-400">
+            참석 {attendingCount}
+            {event.max_participants ? `/${event.max_participants}명` : "명"}
+            {waiting.length > 0 && ` · 대기 ${waiting.length}명`}
+          </span>
+        </div>
+        <div className="bg-white border border-[#4CAF50] rounded-xl overflow-hidden">
+          {/* 진행도 바 */}
+          {event.max_participants && (
+            <div className="px-4 pt-4 pb-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs text-gray-400">모집 현황</span>
+                <span className={`text-xs font-bold ${isFull ? "text-red-500" : "text-[#4CAF50]"}`}>
+                  {isFull ? "마감" : `${Math.round((attendingCount / event.max_participants) * 100)}%`}
+                </span>
+              </div>
+              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${isFull ? "bg-red-400" : "bg-[#4CAF50]"}`}
+                  style={{ width: `${Math.min((attendingCount / event.max_participants) * 100, 100)}%` }}
+                />
+              </div>
             </div>
+          )}
+
+          {/* 참석자 목록 */}
+          <div className={event.max_participants ? "border-t border-gray-50" : ""}>
             {attending.length === 0 ? (
-              <p className="text-sm text-gray-400">아직 참석자가 없습니다.</p>
+              <div className="py-8 text-center">
+                <p className="text-sm text-gray-400">아직 참석자가 없습니다.</p>
+                <p className="text-xs text-gray-300 mt-1">첫 번째로 참석해보세요!</p>
+              </div>
             ) : (
-              <div className="flex flex-wrap gap-3">
-                {attending.map((rsvp) => (
-                  <div key={rsvp.id} className="flex items-center gap-2">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage
-                        src={rsvp.user?.profile_image || undefined}
-                      />
-                      <AvatarFallback className="text-xs bg-[#E8F5E9] text-[#4CAF50]">
-                        {(
-                          rsvp.user?.nickname ||
-                          rsvp.user?.name ||
-                          "?"
-                        ).charAt(0)}
+              <div className="divide-y divide-gray-50">
+                {attending.map((rsvp, index) => (
+                  <div key={rsvp.id} className="flex items-center gap-3 px-4 py-3">
+                    <span className="text-xs text-gray-300 w-5 text-right font-medium shrink-0">
+                      {index + 1}
+                    </span>
+                    <Avatar className="w-9 h-9 shrink-0">
+                      <AvatarImage src={rsvp.user?.profile_image || undefined} />
+                      <AvatarFallback className="text-xs bg-[#E8F5E9] text-[#4CAF50] font-semibold">
+                        {(rsvp.user?.nickname || rsvp.user?.name || "?").charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm font-medium">
+                    <span className="text-sm font-medium flex-1">
                       {rsvp.user?.nickname || rsvp.user?.name}
                     </span>
+                    {rsvp.user_id === user?.id && (
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#E8F5E9] text-[#4CAF50] font-semibold shrink-0">
+                        나
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Waiting */}
+          {/* 대기자 목록 */}
           {waiting.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <div className="flex items-center gap-2 mb-3">
-                <h4 className="font-medium text-sm text-amber-500">대기</h4>
-                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-500">
-                  {waiting.length}명
+            <div className="border-t border-dashed border-amber-200">
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50/50">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                <span className="text-xs font-semibold text-amber-500">
+                  대기 {waiting.length}명
                 </span>
               </div>
-              <div className="flex flex-wrap gap-3">
-                {waiting.map((rsvp) => (
-                  <div
-                    key={rsvp.id}
-                    className="flex items-center gap-2 opacity-70"
-                  >
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage
-                        src={rsvp.user?.profile_image || undefined}
-                      />
-                      <AvatarFallback className="text-xs bg-amber-50 text-amber-500">
-                        {(
-                          rsvp.user?.nickname ||
-                          rsvp.user?.name ||
-                          "?"
-                        ).charAt(0)}
+              <div className="divide-y divide-gray-50">
+                {waiting.map((rsvp, index) => (
+                  <div key={rsvp.id} className="flex items-center gap-3 px-4 py-3">
+                    <span className="text-xs text-gray-300 w-5 text-right font-medium shrink-0">
+                      {index + 1}
+                    </span>
+                    <Avatar className="w-9 h-9 shrink-0">
+                      <AvatarImage src={rsvp.user?.profile_image || undefined} />
+                      <AvatarFallback className="text-xs bg-amber-50 text-amber-400 font-semibold">
+                        {(rsvp.user?.nickname || rsvp.user?.name || "?").charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm">
+                    <span className="text-sm flex-1 text-gray-500">
                       {rsvp.user?.nickname || rsvp.user?.name}
                     </span>
+                    {rsvp.user_id === user?.id && (
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-500 font-semibold shrink-0">
+                        나
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -445,15 +468,13 @@ export default function EventDetailPage() {
       </div>
 
       {/* Sticky bottom RSVP bar */}
-      <div className="fixed bottom-16 left-0 right-0 z-40 bg-white border-t border-gray-100">
+      <div className="sticky bottom-0 z-40 bg-white border-t border-gray-100">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
           {/* Count info */}
           <div className="shrink-0">
             <p className="text-sm font-bold">
               <span className="text-[#4CAF50]">{attendingCount}</span>
-              {event.max_participants
-                ? `/${event.max_participants}`
-                : ""}
+              {event.max_participants ? `/${event.max_participants}` : ""}
               명
             </p>
             <p className="text-[10px] text-gray-400">참석 인원</p>

@@ -9,7 +9,7 @@ export default function DashboardLayout({
   return (
     <div className="h-screen flex flex-col bg-white">
       <Header />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto hide-scrollbar">
         <div className="max-w-lg mx-auto">{children}</div>
       </main>
       <BottomNav />
